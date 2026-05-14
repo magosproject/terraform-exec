@@ -134,12 +134,12 @@ func envSlice(environ map[string]string) []string {
 // This method also enforces some rules for the entire terraform-exec library,
 // for example User Agent data set via ENVs.
 func (tf *Terraform) buildEnv(mergeEnv map[string]string) []string {
-	// set Terraform level env, if env is nil, fall back to os.Environ
-	var env map[string]string
-	if tf.env == nil {
-		env = envMap(os.Environ())
-	} else {
-		env = make(map[string]string, len(tf.env))
+	// always start from the full process environment so that PATH, HOME, cloud
+	// provider credentials, and any other inherited vars reach the subprocess.
+	// vars set via SetEnv are overlaid on top, so they override but never
+	// replace the inherited environment.
+	env := envMap(os.Environ())
+	if tf.env != nil {
 		maps.Copy(env, tf.env)
 	}
 
